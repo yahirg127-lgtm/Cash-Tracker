@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Cash Flow Tracker</title>
+  <style>
+    body { font-family: system-ui, sans-serif; max-width: 600px; margin: 2rem auto; padding: 0 1rem; background: #f8fafc; color: #0f172a; }
+    .card { background: white; padding: 1.5rem; border-radius: 8px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); margin-bottom: 1rem; }
+    .grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1rem; text-align: center; }
+    .amount { font-size: 1.25rem; font-weight: bold; }
+    .income { color: #16a34a; }
+    .expense { color: #dc2626; }
+    form { display: grid; gap: 0.75rem; }
+    input, select, button { padding: 0.5rem; border: 1px solid #cbd5e1; border-radius: 4px; }
+    button { background: #2563eb; color: white; border: none; font-weight: bold; cursor: pointer; }
+    table { width: 100%; border-collapse: collapse; margin-top: 1rem; }
+    th, td { text-align: left; padding: 0.5rem; border-bottom: 1px solid #e2e8f0; }
+  </style>
+</head>
+<body>
+  <h2>Cash Flow Tracker</h2>
+  
+  <div class="card grid">
+    <div><div>Income</div><div id="total-income" class="amount income">$0.00</div></div>
+    <div><div>Expenses</div><div id="total-expense" class="amount expense">$0.00</div></div>
+    <div><div>Net Balance</div><div id="net-balance" class="amount">$0.00</div></div>
+  </div>
+
+  <div class="card">
+    <form id="tx-form">
+      <input type="date" id="date" required>
+      <select id="type">
+        <option value="income">Income</option>
+        <option value="expense">Expense</option>
+      </select>
+      <input type="number" id="amount" step="0.01" placeholder="Amount" required>
+      <input type="text" id="desc" placeholder="Description (e.g. Salary, Groceries)" required>
+      <button type="submit">Record Transaction</button>
+    </form>
+  </div>
+
+  <div class="card">
+    <h3>Transaction History</h3>
+    <table>
+      <thead>
+        <tr><th>Date</th><th>Description</th><th>Type</th><th>Amount</th></tr>
+      </thead>
+      <tbody id="tx-list"></tbody>
+    </table>
+  </div>
+
+  <script>
+    document.getElementById('date').valueAsDate = new Date();
+    let records = JSON.parse(localStorage.getItem('cash_records') || '[]');
+
+    function update() {
+      localStorage.setItem('cash_records', JSON.stringify(records));
+      const list = document.getElementById('tx-list');
+      list.innerHTML = '';
+      let inc = 0, exp = 0;
+
+      records.forEach(r => {
+        if (r.type === 'income') inc += r.amount;
+        else exp += r.amount;
+
+        const row = document.createElement('tr');
+        row.innerHTML = `<td>${r.date}</td><td>${r.desc}</td><td class="${r.type}">${r.type}</td><td class="${r.type}">$${r.amount.toFixed(2)}</td>`;
+        list.appendChild(row);
+      });
+
+      document.getElementById('total-income').textContent = `$${inc.toFixed(2)}`;
+      document.getElementById('total-expense').textContent = `$${exp.toFixed(2)}`;
+      document.getElementById('net-balance').textContent = `$${(inc - exp).toFixed(2)}`;
+    }
+
+    document.getElementById('tx-form').addEventListener('submit', e => {
+      e.preventDefault();
+      records.unshift({
+        date: document.getElementById('date').value,
+        type: document.getElementById('type').value,
+        amount: parseFloat(document.getElementById('amount').value),
+        desc: document.getElementById('desc').value
+      });
+      document.getElementById('amount').value = '';
+      document.getElementById('desc').value = '';
+      update();
+    });
+
+    update();
+  </script>
+</body>
+</html>
